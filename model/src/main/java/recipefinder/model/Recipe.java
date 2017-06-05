@@ -1,7 +1,9 @@
 package recipefinder.model;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static javax.persistence.CascadeType.ALL;
 
@@ -25,7 +27,7 @@ public class Recipe extends Timestamped {
     private String url;
     @OneToMany(cascade = ALL, fetch=FetchType.LAZY)
     @JoinColumn(name="RECIPE_ID", nullable = false)
-    private List<IngredientWithAmount> ingredients;
+    private List<IngredientWithAmount> ingredientsWithAmount;
 
     protected Recipe() {}
 
@@ -33,7 +35,7 @@ public class Recipe extends Timestamped {
         setName(name);
         setUrl(url);
         setSteps(steps);
-        setIngredients(ingredients);
+        setIngredientsWithAmount(ingredients);
     }
 
     public long getId() {
@@ -60,12 +62,12 @@ public class Recipe extends Timestamped {
         this.url = url;
     }
 
-    public List<IngredientWithAmount> getIngredients() {
-        return ingredients;
+    public List<IngredientWithAmount> getIngredientsWithAmount() {
+        return ingredientsWithAmount;
     }
 
-    public void setIngredients(List<IngredientWithAmount> ingredients) {
-        this.ingredients = ingredients;
+    public void setIngredientsWithAmount(List<IngredientWithAmount> ingredients) {
+        this.ingredientsWithAmount = ingredients;
     }
 
     public List<MethodStep> getSteps() {
@@ -76,6 +78,14 @@ public class Recipe extends Timestamped {
         this.steps = steps;
     }
 
+    public Set<String> getIngredientsAsSet(){
+        Set<String> ingredients = new HashSet<String>();
+        for(IngredientWithAmount i: getIngredientsWithAmount()) {
+            ingredients.add(i.getRawIngredient());
+        }
+        return ingredients;
+    }
+
     @Override
     public String toString() {
         return "Recipe{" +
@@ -83,7 +93,7 @@ public class Recipe extends Timestamped {
                 ", name='" + name + '\'' +
                 ", steps=" + steps +
                 ", url='" + url + '\'' +
-                ", ingredients=" + ingredients +
+                ", ingredientsWithAmount=" + ingredientsWithAmount.toString() +
                 '}';
     }
 }

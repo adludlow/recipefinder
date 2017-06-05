@@ -6,6 +6,7 @@ import recipefinder.model.Recipe;
 import recipefinder.model.RecipeRepository;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -32,10 +33,29 @@ public class RecipeController {
     }
 
     @RequestMapping(method=GET)
-    public List<Recipe> getRecipes(@RequestParam(value = "", required = false)String searchString) {
-        Iterable<Recipe> recipeIterable = recipeRepo.findAll();
+    public List<Recipe> getRecipes(@RequestParam(value = "exclusiveIngredientMatch", defaultValue = "false") Boolean exclusiveIngredientMatch,
+                                   @RequestParam(value = "ingredient", required = false)String[] ingredientArray) {
         List<Recipe> recipeList = new ArrayList<Recipe>();
-        recipeIterable.forEach(recipeList::add);
+        if(ingredientArray != null && ingredientArray.length > 0){
+            List<String> ingredientList = Arrays.asList(ingredientArray);
+            if(exclusiveIngredientMatch){
+                Iterable<Recipe> recipeIterable = recipeRepo.findDistinctByIngredientsWithAmount_RawIngredientIn(ingredientList);
+                for(Recipe r:  recipeIterable) {
+                    // find recipes containing all listed ingredients.
+                    if(r.getIngredientsAsSet().containsAll(ingredientList)){
+                        recipeList.add(r);
+                    }
+                }
+            }
+            else {
+                Iterable<Recipe> recipeIterable = recipeRepo.findDistinctByIngredientsWithAmount_RawIngredientIn(Arrays.asList(ingredientArray));
+                recipeIterable.forEach(recipeList::add);
+            }
+        }
+        else {
+            Iterable<Recipe> recipeIterable = recipeRepo.findAll();
+            recipeIterable.forEach(recipeList::add);
+        }
 
         return recipeList;
     }

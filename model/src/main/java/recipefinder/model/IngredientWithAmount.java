@@ -11,10 +11,12 @@ public class IngredientWithAmount extends Timestamped {
     @Column(name="ID")
     @GeneratedValue(strategy= GenerationType.AUTO)
     private long id;
-    @Column(name="INGREDIENT")
+    @Column(name="FULL_INGREDIENT_TEXT")
+    private String fullIngredient;
+    @Column(name="RAW_INGREDIENT")
     private String rawIngredient;
     @Column(name="AMOUNT")
-    private int amount;
+    private String amount;
     @Column(name="UOM")
     private String uom;
     @ManyToOne(fetch = FetchType.LAZY)
@@ -29,6 +31,14 @@ public class IngredientWithAmount extends Timestamped {
         this.id = id;
     }
 
+    public String getFullIngredient() {
+        return fullIngredient;
+    }
+
+    public void setFullIngredient(String fullIngredient) {
+        this.fullIngredient = fullIngredient;
+    }
+
     public String getRawIngredient() {
         return rawIngredient;
     }
@@ -37,11 +47,11 @@ public class IngredientWithAmount extends Timestamped {
         this.rawIngredient = ingredient;
     }
 
-    public int getAmount() {
+    public String getAmount() {
         return amount;
     }
 
-    public void setAmount(int amount) {
+    public void setAmount(String amount) {
         this.amount = amount;
     }
 
