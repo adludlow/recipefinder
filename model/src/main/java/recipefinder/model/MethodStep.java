@@ -9,7 +9,8 @@ import javax.persistence.*;
 public class MethodStep {
     @Id
     @Column(name="ID")
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @GeneratedValue(generator="method_step_id_seq")
+    @SequenceGenerator(name="method_step_id_seq", sequenceName = "METHOD_STEP_ID_SEQ", allocationSize = 1)
     private long id;
     @Column(name="STEP_TEXT", length = 1000)
     private String stepText;

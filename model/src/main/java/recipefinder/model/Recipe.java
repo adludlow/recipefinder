@@ -15,7 +15,8 @@ import static javax.persistence.CascadeType.ALL;
 public class Recipe extends Timestamped {
     @Id
     @Column(name="ID")
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @GeneratedValue(generator="recipe_id_seq")
+    @SequenceGenerator(name="recipe_id_seq", sequenceName = "RECIPE_ID_SEQ", allocationSize = 1)
     private long id;
 
     @Column(name="NAME")
@@ -28,6 +29,11 @@ public class Recipe extends Timestamped {
     @OneToMany(cascade = ALL, fetch=FetchType.LAZY)
     @JoinColumn(name="RECIPE_ID", nullable = false)
     private List<IngredientWithAmount> ingredientsWithAmount;
+    @ManyToMany(cascade = ALL)
+    @JoinTable(name="RECIPE_INGREDIENTS",
+               joinColumns = @JoinColumn(name = "RECIPE_ID", referencedColumnName = "ID"),
+               inverseJoinColumns = @JoinColumn(name = "INGREDIENT_ID", referencedColumnName = "ID"))
+    private List<Ingredient> ingredients;
 
     protected Recipe() {}
 
@@ -78,6 +84,14 @@ public class Recipe extends Timestamped {
         this.steps = steps;
     }
 
+    public List<Ingredient> getIngredients() {
+        return ingredients;
+    }
+
+    public void setIngredients(List<Ingredient> ingredients) {
+        this.ingredients = ingredients;
+    }
+
     public Set<String> getIngredientsAsSet(){
         Set<String> ingredients = new HashSet<String>();
         for(IngredientWithAmount i: getIngredientsWithAmount()) {
@@ -95,5 +109,30 @@ public class Recipe extends Timestamped {
                 ", url='" + url + '\'' +
                 ", ingredientsWithAmount=" + ingredientsWithAmount.toString() +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Recipe recipe = (Recipe) o;
+
+        if (getName() != null ? !getName().equals(recipe.getName()) : recipe.getName() != null) return false;
+        if (getSteps() != null ? !getSteps().equals(recipe.getSteps()) : recipe.getSteps() != null) return false;
+        if (getUrl() != null ? !getUrl().equals(recipe.getUrl()) : recipe.getUrl() != null) return false;
+        if (getIngredientsWithAmount() != null ? !getIngredientsWithAmount().equals(recipe.getIngredientsWithAmount()) : recipe.getIngredientsWithAmount() != null)
+            return false;
+        return getIngredients() != null ? getIngredients().equals(recipe.getIngredients()) : recipe.getIngredients() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getName() != null ? getName().hashCode() : 0;
+        result = 31 * result + (getSteps() != null ? getSteps().hashCode() : 0);
+        result = 31 * result + (getUrl() != null ? getUrl().hashCode() : 0);
+        result = 31 * result + (getIngredientsWithAmount() != null ? getIngredientsWithAmount().hashCode() : 0);
+        result = 31 * result + (getIngredients() != null ? getIngredients().hashCode() : 0);
+        return result;
     }
 }

@@ -9,7 +9,8 @@ import javax.persistence.*;
 public class IngredientWithAmount extends Timestamped {
     @Id
     @Column(name="ID")
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @GeneratedValue(generator="iwa_id_seq")
+    @SequenceGenerator(name="iwa_id_seq", sequenceName = "IWA_ID_SEQ", allocationSize = 1)
     private long id;
     @Column(name="FULL_INGREDIENT_TEXT")
     private String fullIngredient;
