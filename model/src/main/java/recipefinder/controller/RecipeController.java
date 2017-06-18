@@ -1,6 +1,8 @@
 package recipefinder.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import recipefinder.model.*;
 
@@ -24,12 +26,17 @@ public class RecipeController {
     IngredientRepository ingredientRepo;
 
     @RequestMapping(path="/{id}", method=GET)
-    public Recipe getRecipe(@PathVariable(value="id") Long id) {
-        return recipeRepo.findOne(id);
+    public ResponseEntity<Recipe> getRecipe(@PathVariable(value="id") Long id) {
+        return new ResponseEntity<Recipe>(recipeRepo.findOne(id), HttpStatus.OK);
     }
 
     @RequestMapping(method=POST)
-    public Recipe saveRecipe(@RequestBody Recipe recipe) {
+    public ResponseEntity<Recipe> saveRecipe(@RequestBody Recipe recipe) throws RecipeConflictException {
+        // Check if recipe exists using url
+        List<Recipe> existing = recipeRepo.findByUrl(recipe.getUrl());
+        if(existing.size() > 0){
+            throw new RecipeConflictException("Recipe with url: " + recipe.getUrl() + " already exists.");
+        }
         List<Ingredient> ingredients = new ArrayList<Ingredient>();
         for(IngredientWithAmount iwa: recipe.getIngredientsWithAmount()) {
             List<String> ingredientStrings = new ArrayList<String>(Arrays.asList(iwa.getRawIngredient().split(" ")));
@@ -48,17 +55,23 @@ public class RecipeController {
             }
         }
         recipe.setIngredients(ingredients);
-        return recipeRepo.save(recipe);
+        return new ResponseEntity<Recipe>(recipeRepo.save(recipe), HttpStatus.OK);
     }
 
     @RequestMapping(method=GET)
-    public List<Recipe> getRecipes(@RequestParam(value = "exclusiveIngredientMatch", defaultValue = "false") Boolean exclusiveIngredientMatch,
-                                   @RequestParam(value = "ingredient", required = false)String[] ingredientArray) {
+    public ResponseEntity<List<Recipe>> getRecipesByIngredient(@RequestParam(value = "url", defaultValue = "") String url,
+                                               @RequestParam(value = "exclusiveIngredientMatch", defaultValue = "false") Boolean exclusiveIngredientMatch,
+                                               @RequestParam(value = "ingredient", required = false) String[] ingredientArray) {
+        // Search by URL takes precedence
+        if(url.length() > 0){
+            return new ResponseEntity<List<Recipe>>(recipeRepo.findByUrl(url), HttpStatus.OK);
+        }
+
         List<Recipe> recipeList = new ArrayList<Recipe>();
         if(ingredientArray != null && ingredientArray.length > 0){
             List<String> ingredientList = Arrays.asList(ingredientArray);
             if(exclusiveIngredientMatch){
-                Iterable<Recipe> recipeIterable = recipeRepo.findDistinctByIngredientsWithAmount_RawIngredientIn(ingredientList);
+                Iterable<Recipe> recipeIterable = recipeRepo.findDistinctByIngredients_IngredientIn(ingredientList);
                 for(Recipe r:  recipeIterable) {
                     // find recipes containing all listed ingredients.
                     if(r.getIngredientsAsSet().containsAll(ingredientList)){
@@ -67,7 +80,7 @@ public class RecipeController {
                 }
             }
             else {
-                Iterable<Recipe> recipeIterable = recipeRepo.findDistinctByIngredientsWithAmount_RawIngredientIn(Arrays.asList(ingredientArray));
+                Iterable<Recipe> recipeIterable = recipeRepo.findDistinctByIngredients_IngredientIn(Arrays.asList(ingredientArray));
                 recipeIterable.forEach(recipeList::add);
             }
         }
@@ -76,6 +89,11 @@ public class RecipeController {
             recipeIterable.forEach(recipeList::add);
         }
 
-        return recipeList;
+        return new ResponseEntity<List<Recipe>>(recipeList, HttpStatus.OK);
+    }
+
+    @ExceptionHandler(RecipeConflictException.class)
+    public ResponseEntity<String> handleConflictException(RecipeConflictException e) {
+        return new ResponseEntity<String>(e.getMessage(), HttpStatus.CONFLICT);
     }
 }

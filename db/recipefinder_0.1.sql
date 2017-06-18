@@ -22,6 +22,7 @@ create sequence IWA_ID_SEQ
     minvalue 1
     no maxvalue
     cache 1;
+alter table IWA_ID_SEQ owner to recipe_admin;
 
 CREATE TABLE INGREDIENT_WITH_AMOUNT (
     id bigint NOT NULL,
@@ -42,13 +43,13 @@ create sequence method_step_id_seq
     minvalue 1
     no maxvalue
     cache 1;
+alter table method_step_id_seq owner to recipe_admin;
 
 CREATE TABLE method_step (
     id bigint NOT NULL,
     step_text character varying(1000),
     recipe_id bigint
 );
-
 
 ALTER TABLE method_step OWNER TO recipe_admin;
 
@@ -58,6 +59,7 @@ create sequence recipe_id_seq
     minvalue 1
     no maxvalue
     cache 1;
+alter table recipe_id_seq owner to recipe_admin;
 
 CREATE TABLE recipe (
     id bigint NOT NULL,

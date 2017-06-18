@@ -9,5 +9,7 @@ import java.util.List;
  */
 public interface RecipeRepository extends PagingAndSortingRepository<Recipe, Long> {
     List<Recipe> findDistinctByIngredientsWithAmount_RawIngredientIn(List<String> rawIngedients);
+    List<Recipe> findDistinctByIngredients_IngredientIn(List<String> ingredients);
+    List<Recipe> findByUrl(String url);
 
 }
