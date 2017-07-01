@@ -79,6 +79,24 @@ CREATE TABLE recipe_ingredients (
 
 ALTER TABLE recipe_ingredients OWNER TO recipe_admin;
 
+create sequence unrec_ingr_id_seq
+    start with 1
+    increment by 1
+    minvalue 1
+    no maxvalue
+    cache 1;
+
+CREATE TABLE unrecognised_ingredient (
+    id bigint NOT NULL,
+    iwa_id bigint NOT NULL,
+    CREATED_TIMESTAMP timestamp without time zone not null,
+    UPDATED_TIMESTAMP timestamp without time zone not null
+);
+ALTER TABLE unrecognised_ingredient OWNER TO recipe_admin;
+
+ALTER TABLE ONLY unrecognised_ingredient
+    ADD CONSTRAINT unrec_ingr_pkey PRIMARY KEY (id);
+
 ALTER TABLE ONLY ingredient
     ADD CONSTRAINT ingredient_pkey PRIMARY KEY (id);
 

@@ -6,9 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import recipefinder.model.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -60,7 +58,8 @@ public class RecipeController {
 
     @RequestMapping(method=GET)
     public ResponseEntity<List<Recipe>> getRecipesByIngredient(@RequestParam(value = "url", defaultValue = "") String url,
-                                               @RequestParam(value = "exclusiveIngredientMatch", defaultValue = "false") Boolean exclusiveIngredientMatch,
+                                               @RequestParam(value = "includesAll", defaultValue = "false") Boolean includesAll,
+                                               @RequestParam(value = "includesOnly", defaultValue = "false") Boolean includesOnly,
                                                @RequestParam(value = "ingredient", required = false) String[] ingredientArray) {
         // Search by URL takes precedence
         if(url.length() > 0){
@@ -70,8 +69,18 @@ public class RecipeController {
         List<Recipe> recipeList = new ArrayList<Recipe>();
         if(ingredientArray != null && ingredientArray.length > 0){
             List<String> ingredientList = Arrays.asList(ingredientArray);
-            if(exclusiveIngredientMatch){
-                Iterable<Recipe> recipeIterable = recipeRepo.findDistinctByIngredients_IngredientIn(ingredientList);
+            Iterable<Recipe> recipeIterable = recipeRepo.findDistinctByIngredients_IngredientIn(ingredientList);
+            if(includesOnly){
+                for(Recipe r: recipeIterable) {
+                    // find recipes contaning only listed ingredients.
+                    Set<String> ingredientSet = r.getIngredientsAsSet();
+                    if(ingredientSet.containsAll(ingredientList) &&
+                       ingredientSet.size() == new HashSet(ingredientList).size()){
+                        recipeList.add(r);
+                    }
+                }
+            }
+            else if(includesAll){
                 for(Recipe r:  recipeIterable) {
                     // find recipes containing all listed ingredients.
                     if(r.getIngredientsAsSet().containsAll(ingredientList)){
@@ -80,11 +89,11 @@ public class RecipeController {
                 }
             }
             else {
-                Iterable<Recipe> recipeIterable = recipeRepo.findDistinctByIngredients_IngredientIn(Arrays.asList(ingredientArray));
                 recipeIterable.forEach(recipeList::add);
             }
         }
         else {
+            // TODO should be a PageRequest
             Iterable<Recipe> recipeIterable = recipeRepo.findAll();
             recipeIterable.forEach(recipeList::add);
         }
